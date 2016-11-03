@@ -6,6 +6,7 @@ app.use(bodyParser.json()); // for parsing application/json
 
 var Datastore = require('nedb')
   , db = new Datastore({ filename: 'db.json', autoload: true ,timestampData:true});
+var online={}; //在线状态
 
 //设置跨域访问  
 app.all('*', function(req, res, next) {  
@@ -40,9 +41,15 @@ app.get('/all',function(req,res){
 	});
 })
 
+//查询所有在线状态
+app.get('/online',function(req,res){
+	res.json(online);
+})
+
 //查询状态(必须放在最后)
 app.get('/:mac', function (req, res) {
 	var mac=req.params.mac;
+	online[mac]=Date.now();//记录最后一次访问状态
 	db.findOne({ mac: mac }, function (err, doc) {
   	var status=doc?doc.status:"ON";
   	res.end(status);
