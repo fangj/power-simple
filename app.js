@@ -8,30 +8,51 @@ var Datastore = require('nedb')
   , db = new Datastore({ filename: 'db.json', autoload: true ,timestampData:true});
 var online={}; //在线状态
 
+//静态文件
+var path=require('path');
+app.use(express.static(path.join(__dirname, 'public')));
+
 //设置跨域访问  
 app.all('*', function(req, res, next) {  
     res.header("Access-Control-Allow-Origin", "*");  
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");  
     res.header("Access-Control-Allow-Methods","PUT,POST,GET,DELETE,OPTIONS");  
+    res.header("Content-Type", "application/json;charset=utf-8");  
     next();  
 }); 
 
+function setStatus(status,cb){
+	db.update({ mac: status.mac }, status, { upsert: true,returnUpdatedDocs:true },cb);
+}
+
 //设置状态
 app.post('/set', function (req, res) {
-	var body=req.body;
-	if(!body || !body.mac || !body.status){
+	var status=req.body;
+	if(!status || !status.mac || !status.status){
 		res.status(400);
 		return res.end('格式错误，应该为{mac:"xxx",status:"ON"}');
 	}
-	var mac=req.params.mac;
-	db.update({ mac: body.mac }, body, { upsert: true,returnUpdatedDocs:true }, function (err, numReplaced, upsert) {
+	setStatus(status,function (err, numReplaced, upsert) {
 	  if(err){
 	  	return res.status(500).end(err);
 	  }else{
 	  	return res.json(upsert);
 	  }
-	});
+	})
 })
+
+//批量设置状态
+app.post('/setb', function (req, res) {
+	var statuses=req.body;
+	if(statuses && statuses instanceof Array){
+		statuses.map(status=>setStatus(status));
+		res.end();
+	}else{
+		res.status(400);
+		return res.end('格式错误，应该为数组：[{mac:"xxx",status:"ON"}]');
+	}
+})
+
 
 //查询所有状态
 app.get('/all',function(req,res){

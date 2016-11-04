@@ -45,14 +45,22 @@ const command={"mac":"aa:bb:cc:xx","status":"ON"};
 setCommand(command)
 
 
-const setCommandAndWait=(command)=>setCommand(command).then(_=>wait(100));//设置命令发出后等待0.1s
+// const setCommandAndWait=(command)=>setCommand(command).then(_=>wait(100));//设置命令发出后等待0.1s
 
 
 //批量设置状态
-function setComands(commands){
-	commands.reduce((p,mac)=>p.then(_=>setCommandAndWait(mac)),Promise.resolve());
+// function setCommands(commands){
+// 	commands.reduce((p,mac)=>p.then(_=>setCommandAndWait(mac)),Promise.resolve());
+// }
+
+const setCommands=(commands)=>{
+	return api.post('/setb', {body:commands}).then(res=>{
+		console.log('设置成功',res.body)
+	}).catch(e=>{
+		console.error(e)
+	})
 }
 
 //测试
-commands=[{"mac":"aa:bb:cc:11","status":"ON"},{"mac":"aa:bb:cc:22","status":"OFF"},{"mac":"aa:bb:cc:33","status":"OFF"},{"mac":"aa:bb:cc:44","status":"OFF"}];
-setComands(commands)
+commands=[{"mac":"18:fe:34:cc:37:c7","status":"ON"},{"mac":"60:01:94:02:2b:3c","status":"OFF"},{"mac":"5c:ef:7f:87:58:e4","status":"ON"},{"mac":"18:fe:34:cc:34:d4","status":"OFF"}];
+setCommands(commands)
